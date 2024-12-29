@@ -1,34 +1,32 @@
-name: Build and Publish
+name: Build and Publish VS Code Extension
 
 on:
   push:
     branches:
-      - main  # Trigger this workflow on pushes to the main branch
+      - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest  # Specify the type of runner to use
+  publish:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2  # Check out the repository code
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Specify Node.js version
+          node-version: "18"
 
-      - name: Install dependencies
-        run: npm install  # Install project dependencies
+      - name: Install Dependencies
+        run: npm install
 
       - name: Build Extension
-        env:
-          API_KEY: ${{ secrets.API_KEY }}  # Use secret for API key
-        run: npm run build  # Replace with your build command
-
-      - name: Package Extension
-        run: npx vsce package  # Package your extension
+        run: npx vsce package
 
       - name: Publish Extension
+        run: |
+          echo "Injecting secret token during publish..."
+          API_KEY=${{ secrets.API_KEY }} npx vsce publish --pat $VSCE_PAT
         env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}  # Use secret for publishing token
-        run: npx vsce publish  # Publish your extension
+          VSCE_PAT: ${{ secrets.VSCE_PAT }} # Personal Access Token for VSCE Publish
