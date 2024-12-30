@@ -12,21 +12,33 @@ export async function octokitInstance(token: string) {
   return new Octokit.Octokit({ auth: token });
 }
 
-async function getGoogleGenerativeAI(content: string, prevContent: string) {
-  const genAI = new GoogleGenerativeAI(process.env.API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  const result = await model.generateContent(
-    `${BASE_PROMPT}\n\ncurrent Code:\n${content}\n\nprevious code:\n${prevContent}`
-  );
-  prevContent = content;
-  console.log(result.response.text());
-  return JSON.parse(
-    result.response
-      .text()
-      .replace(/```json/g, "")
-      .trim()
-      .slice(0, -4)
-  );
+async function getGoogleGenerativeAI(
+  content: string,
+  prevContent: string,
+  input: string | undefined
+) {
+  if (!input && !process.env.API_KEY) {
+    vscode.window.showErrorMessage("API key is missing");
+    return;
+  }
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.API_KEY || input);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(
+      `${BASE_PROMPT}\n\ncurrent Code:\n${content}\n\nprevious code:\n${prevContent}`
+    );
+    prevContent = content;
+    console.log(result.response.text());
+    return JSON.parse(
+      result.response
+        .text()
+        .replace(/```json/g, "")
+        .trim()
+        .slice(0, -4)
+    );
+  } catch (err) {
+    vscode.window.showErrorMessage("API key is invalid");
+  }
 }
 async function getRecentFileHashes(
   octokit: any,
@@ -76,7 +88,8 @@ export async function getSavedContent(
   document: vscode.TextDocument,
   user: string,
   repoName: string,
-  token: string
+  token: string,
+  input: string | undefined
 ) {
   callCount = context.globalState.get<number>("callCount", 0);
   const diagnostics = vscode.languages.getDiagnostics(document.uri);
@@ -103,7 +116,11 @@ export async function getSavedContent(
   if (prevContent === "") {
     prevContent = content;
   }
-  const commitMessage = await getGoogleGenerativeAI(content, prevContent);
+  const commitMessage = await getGoogleGenerativeAI(
+    content,
+    prevContent,
+    input
+  );
 
   const fileName = `tasklog${callCount + 1}.md`;
   let sha: string | undefined;

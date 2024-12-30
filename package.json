@@ -5,7 +5,7 @@
   "icon": "icon.png",
   "description": "",
   "repository": "https://github.com/Its-sunny69/GitTimeline",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "engines": {
     "vscode": "^1.96.0"
   },

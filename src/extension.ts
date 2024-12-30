@@ -11,6 +11,12 @@ export async function activate(
   const createRepoCommand = vscode.commands.registerCommand(
     "gittimeline.createRepo",
     async () => {
+      const input = await vscode.window.showInputBox({
+        prompt: "Enter your API key",
+        placeHolder: "e.g., abc123",
+        ignoreFocusOut: true, // Keeps the input box open even if the user clicks outside
+      });
+
       const credentials = await vscode.authentication.getSession(
         "github",
         ["repo"],
@@ -94,10 +100,10 @@ export async function activate(
             }
 
             debounceTimer = setTimeout(async () => {
-              getSavedContent(context, document, user, repoName, token);
+              getSavedContent(context, document, user, repoName, token, input);
             }, 30 * 60 * 1000);
           } else {
-            getSavedContent(context, document, user, repoName, token);
+            getSavedContent(context, document, user, repoName, token, input);
           }
         });
       } catch (error: any) {
