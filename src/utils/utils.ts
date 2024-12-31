@@ -7,6 +7,28 @@ const BASE_PROMPT =
 let callCount = 0;
 let prevContent: string = "";
 
+function generateFileHash(content: string): string {
+  const hashSum = crypto.createHash('sha256');
+  hashSum.update(content);
+  return hashSum.digest('hex');
+}
+
+function storeHashesInGlobalState(fileHash: string, context: vscode.ExtensionContext) {
+  const existingHashes = getHashesFromGlobalState(context);
+  const newHashes = [...existingHashes, fileHash];
+  context.globalState.update('fileHashes', newHashes);
+}
+
+function getHashesFromGlobalState(context: vscode.ExtensionContext): [] {
+  return context.globalState.get('fileHashes') || [];
+}
+
+function compareAndStoreHashes(context: vscode.ExtensionContext, content: string): boolean {
+  const existingHashes = getHashesFromGlobalState(context);
+  const fileHash = generateFileHash(content);
+  return existingHashes.some((entry: string) => entry === fileHash);
+}
+
 export async function octokitInstance(token: string) {
   const Octokit = await import("@octokit/rest");
   return new Octokit.Octokit({ auth: token });
@@ -39,48 +61,6 @@ async function getGoogleGenerativeAI(
   } catch (err) {
     vscode.window.showErrorMessage("API key is invalid");
   }
-}
-async function getRecentFileHashes(
-  octokit: any,
-  user: string,
-  repoName: string,
-  sinceDurationMs: number
-): Promise<string[]> {
-  const now = new Date();
-  const since = new Date(now.getTime() - sinceDurationMs).toISOString();
-  const recentFileHashes: string[] = [];
-
-  try {
-    const { data: commits } = await octokit.rest.repos.listCommits({
-      owner: user,
-      repo: repoName,
-      since,
-    });
-
-    for (const commit of commits) {
-      const { data: commitDetails } = await octokit.rest.repos.getCommit({
-        owner: user,
-        repo: repoName,
-        ref: commit.sha,
-      });
-
-      for (const file of commitDetails.files || []) {
-        if (file.sha) {
-          recentFileHashes.push(file.sha);
-        }
-      }
-    }
-  } catch (err) {
-    console.error("Error fetching recent file hashes:", err);
-  }
-
-  return recentFileHashes;
-}
-
-function computeGitHubCompatibleHash(content: string): string {
-  const fileSize = Buffer.byteLength(content, "utf8");
-  const blob = `blob ${fileSize}\0${content}`;
-  return crypto.createHash("sha1").update(blob).digest("hex");
 }
 
 export async function getSavedContent(
@@ -134,25 +114,15 @@ export async function getSavedContent(
   } catch (err: any) {
     if (err.status !== 404) throw err;
   }
-  const newFileHash = computeGitHubCompatibleHash(content);
 
-  console.log("newFileHash", newFileHash);
-
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-
-  const recentHashes = await getRecentFileHashes(
-    octokit,
-    user,
-    repoName,
-    ONE_HOUR_MS
-  );
-
-  if (recentHashes.includes(newFileHash)) {
+  if (compareAndStoreHashes(context, content)) {
     vscode.window.showInformationMessage(
       `The file "${fileName}" content already exists in the repository.`
     );
     return;
   }
+
+  storeHashesInGlobalState(generateFileHash(content), context);
 
   const encodedContent = Buffer.from(commitMessage.summary).toString("base64");
   await octokit.rest.repos
