@@ -12,7 +12,7 @@ export async function activate(
     "gittimeline.createRepo",
     async () => {
       const input = await vscode.window.showInputBox({
-        prompt: "Enter your API key",
+        prompt: "Enter your GEMINI API key",
         placeHolder: "e.g., abc123",
         ignoreFocusOut: true, // Keeps the input box open even if the user clicks outside
       });

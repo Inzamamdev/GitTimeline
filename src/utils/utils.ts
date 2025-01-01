@@ -8,22 +8,28 @@ let callCount = 0;
 let prevContent: string = "";
 
 function generateFileHash(content: string): string {
-  const hashSum = crypto.createHash('sha256');
+  const hashSum = crypto.createHash("sha256");
   hashSum.update(content);
-  return hashSum.digest('hex');
+  return hashSum.digest("hex");
 }
 
-function storeHashesInGlobalState(fileHash: string, context: vscode.ExtensionContext) {
+function storeHashesInGlobalState(
+  fileHash: string,
+  context: vscode.ExtensionContext
+) {
   const existingHashes = getHashesFromGlobalState(context);
   const newHashes = [...existingHashes, fileHash];
-  context.globalState.update('fileHashes', newHashes);
+  context.globalState.update("fileHashes", newHashes);
 }
 
 function getHashesFromGlobalState(context: vscode.ExtensionContext): [] {
-  return context.globalState.get('fileHashes') || [];
+  return context.globalState.get("fileHashes") || [];
 }
 
-function compareAndStoreHashes(context: vscode.ExtensionContext, content: string): boolean {
+function compareAndStoreHashes(
+  context: vscode.ExtensionContext,
+  content: string
+): boolean {
   const existingHashes = getHashesFromGlobalState(context);
   const fileHash = generateFileHash(content);
   return existingHashes.some((entry: string) => entry === fileHash);
@@ -116,9 +122,6 @@ export async function getSavedContent(
   }
 
   if (compareAndStoreHashes(context, content)) {
-    vscode.window.showInformationMessage(
-      `The file "${fileName}" content already exists in the repository.`
-    );
     return;
   }
 
