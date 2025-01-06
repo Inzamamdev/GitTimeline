@@ -84,9 +84,6 @@ export async function getSavedContent(
       (diagnostic) => diagnostic.severity === vscode.DiagnosticSeverity.Error
     )
   ) {
-    vscode.window.showErrorMessage(
-      "The file contains errors. Fix them before saving."
-    );
     return;
   }
 
