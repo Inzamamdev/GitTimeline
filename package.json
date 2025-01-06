@@ -3,11 +3,11 @@
   "publisher": "DevDynamos",
   "displayName": "GitTimeline",
   "icon": "icon.png",
-  "description": "",
+  "description": "GitTimeline is a VS Code extension designed to help developers track their coding activities seamlessly and effectively. This extension automatically commits changes to a Git repository after every save, summarizing what you worked on and the previous work in a dedicated branch called code-tracking.",
   "repository": "https://github.com/Its-sunny69/GitTimeline",
-  "version": "1.0.9",
+  "version": "1.1.1",
   "engines": {
-    "vscode": "^1.87.0"
+    "vscode": "^1.93.0"
   },
   "categories": [
     "Other"
@@ -44,7 +44,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
-    "@types/vscode": "^1.87.0",
+    "@types/vscode": "^1.93.0",
     "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^8.17.0",
     "@vscode/test-cli": "^0.0.10",
